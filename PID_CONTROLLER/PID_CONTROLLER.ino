@@ -1,12 +1,13 @@
 #include <PID_v1.h>
 
-#define GPIO1  12
+#define GPIO1 12
+#define GPIO2 18
 #define PI 3.1415926535897932384626433832795
 
 const int PID_SAMPLING_TIME = 100000; // in microseconds
-const float PULSE_PER_REVOLUTION = 40; // no. of ticks arriving for 1 shaft revolution
+const float PULSE_PER_REVOLUTION = 20; // no. of ticks arriving for 1 shaft revolution
 
-const int required_rpm = 80;
+const int required_rpm = 100;
 int encoder_count = 0;
 unsigned long last_reset_time;
 
@@ -18,12 +19,12 @@ int enablePin = 14;
 const int freq = 60000;
 const int pwmChannel = 0;
 const int resolution = 8;
-int dutyCycle = 50; // Approx half the voltage 1.65
+int dutyCycle = 150; // Approx half the voltage 1.65
 
 // PID constants
-double kp = 0.1;  // Proportional gain
-double ki = 0.01; // Integral gain
-double kd = 0.1;  // Derivative gain
+double kp = 1.2;  // Proportional gain
+double ki = 0.0; // Integral gain
+double kd = 0.0;  // Derivative gain
 
 double input, output, setpoint;
 PID myPID(&input, &output, &setpoint, kp, ki, kd, DIRECT);
@@ -31,6 +32,11 @@ PID myPID(&input, &output, &setpoint, kp, ki, kd, DIRECT);
 void IRAM_ATTR isr()
 {
   encoder_count++;
+}
+
+void IRAM_ATTR isr2()
+{
+  kp+=0.01;
 }
 
 float get_omega()
@@ -59,8 +65,8 @@ void setup()
 
   ledcSetup(pwmChannel, freq, resolution);
   ledcAttachPin(enablePin, pwmChannel);
-  attachInterrupt(GPIO1, isr, CHANGE);
-
+  attachInterrupt(GPIO1, isr, RISING);
+  attachInterrupt(GPIO2, isr2, RISING);
   last_reset_time = micros();
 
   // Initialize PID
