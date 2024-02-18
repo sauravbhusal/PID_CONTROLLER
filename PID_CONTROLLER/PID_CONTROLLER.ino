@@ -1,13 +1,13 @@
 #include <PID_v1.h>
 
 #define GPIO1 12
-#define GPIO2 18
+#define GPIO2 19
 #define PI 3.1415926535897932384626433832795
 
-const int PID_SAMPLING_TIME = 100000; // in microseconds
-const float PULSE_PER_REVOLUTION = 20; // no. of ticks arriving for 1 shaft revolution
+const int PID_SAMPLING_TIME = 20000; // in microseconds
+const float PULSE_PER_REVOLUTION = 40; // no. of ticks arriving for 1 shaft revolution
 
-const int required_rpm = 100;
+const int required_rpm = 200;
 int encoder_count = 0;
 unsigned long last_reset_time;
 
@@ -22,11 +22,11 @@ const int resolution = 8;
 int dutyCycle = 150; // Approx half the voltage 1.65
 
 // PID constants
-double kp = 1.2;  // Proportional gain
+double kp = 1;  // Proportional gain
 double ki = 0.0; // Integral gain
-double kd = 0.0;  // Derivative gain
+double kd = 1;  // Derivative gain
 
-double input, output, setpoint;
+double input, output, setpoint=required_rpm ;
 PID myPID(&input, &output, &setpoint, kp, ki, kd, DIRECT);
 
 void IRAM_ATTR isr()
@@ -36,7 +36,7 @@ void IRAM_ATTR isr()
 
 void IRAM_ATTR isr2()
 {
-  kp+=0.01;
+  kp+=0.0001;
 }
 
 float get_omega()
@@ -65,14 +65,15 @@ void setup()
 
   ledcSetup(pwmChannel, freq, resolution);
   ledcAttachPin(enablePin, pwmChannel);
-  attachInterrupt(GPIO1, isr, RISING);
-  attachInterrupt(GPIO2, isr2, RISING);
+  attachInterrupt(GPIO1, isr, CHANGE);
+  attachInterrupt(GPIO2, isr2, HIGH);
   last_reset_time = micros();
 
   // Initialize PID
   input = get_omega();
   setpoint = required_rpm;
   myPID.SetMode(AUTOMATIC);
+  myPID.SetOutputLimits(0, 255);
 }
 
 void loop()
@@ -81,16 +82,25 @@ void loop()
     return;
 
   float omega = get_omega();
-  Serial.println(omega);
+
+  // Serial.print("KP");
+  Serial.print(kp);
+  Serial.print(" ");
+  // Serial.print("omega");
+
+  Serial.print(setpoint);
 
   input = omega;
 
   myPID.Compute(); // Calculate PID output
-
-  dutyCycle = constrain(output, 0, 255);
+  Serial.print(" ");
+  // Serial.print("output");
+  Serial.println(output);
+  // dutyCycle = constrain(output, 0, 255);
+  // Serial.println(dutyCycle);
 
   digitalWrite(motorPin2, HIGH);
   digitalWrite(motorPin1, LOW);
 
-  ledcWrite(pwmChannel, dutyCycle);
+  ledcWrite(pwmChannel, output);
 }
