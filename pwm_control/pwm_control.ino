@@ -6,7 +6,7 @@ const int freq = 60000;
 const int pwmChannel = 0;
 const int resolution = 8;
 const int sensorPin = 12;
-int dutyCycle = 127; // Approx half the voltage 1.65
+int dutyCycle = 150; // Approx half the voltage 1.65
 
 unsigned long start_time = 0;
 unsigned long end_time = 0;
@@ -34,7 +34,6 @@ void loop() {
 
   start_time = millis();
   end_time = start_time+1000;
-
   //measure steps taken within 1 second
   while (millis()<end_time){
     if (digitalRead(sensorPin)){
@@ -46,9 +45,14 @@ void loop() {
   steps_old = steps;
   rps = temp/20;
   rpm = rps*60;
-  ets_print("rpm:%f\n", rpm);
+  printf("rpm:%f\n", rpm);
   
   //move the motor in increasing speed
+  dutyCycle +=10;
+  if(dutyCycle > 255)
+  {
+    dutyCycle = 80;
+  }
   digitalWrite(motorPin2, HIGH);
   digitalWrite(motorPin1, LOW);
   ledcWrite(pwmChannel,dutyCycle);

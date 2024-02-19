@@ -7,7 +7,7 @@
 const int PID_SAMPLING_TIME = 20000; // in microseconds
 const float PULSE_PER_REVOLUTION = 40; // no. of ticks arriving for 1 shaft revolution
 
-const int required_rpm = 200;
+const int required_rpm = 60;
 int encoder_count = 0;
 unsigned long last_reset_time;
 
@@ -22,9 +22,9 @@ const int resolution = 8;
 int dutyCycle = 150; // Approx half the voltage 1.65
 
 // PID constants
-double kp = 1;  // Proportional gain
-double ki = 0.0; // Integral gain
-double kd = 1;  // Derivative gain
+double kp = 0.15;  // Proportional gain
+double ki = 0.8; // Integral gain
+double kd = 0.0001;  // Derivative gain
 
 double input, output, setpoint=required_rpm ;
 PID myPID(&input, &output, &setpoint, kp, ki, kd, DIRECT);
@@ -34,10 +34,10 @@ void IRAM_ATTR isr()
   encoder_count++;
 }
 
-void IRAM_ATTR isr2()
-{
-  kp+=0.0001;
-}
+// void IRAM_ATTR isr2()
+// {
+//   kp+=0.0001;
+// }
 
 float get_omega()
 {
@@ -66,7 +66,7 @@ void setup()
   ledcSetup(pwmChannel, freq, resolution);
   ledcAttachPin(enablePin, pwmChannel);
   attachInterrupt(GPIO1, isr, CHANGE);
-  attachInterrupt(GPIO2, isr2, HIGH);
+  //attachInterrupt(GPIO2, isr2, HIGH);
   last_reset_time = micros();
 
   // Initialize PID
@@ -89,7 +89,9 @@ void loop()
   // Serial.print("omega");
 
   Serial.print(setpoint);
-
+  Serial.print(" ");
+  Serial.print(omega);
+  //Serial.print(" ");
   input = omega;
 
   myPID.Compute(); // Calculate PID output
