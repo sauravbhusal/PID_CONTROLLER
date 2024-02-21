@@ -22,11 +22,11 @@ const int resolution = 8;
 int dutyCycle = 150; // Approx half the voltage 1.65
 
 // PID constants
-double kp = 0.15;  // Proportional gain
-double ki = 0.8; // Integral gain
-double kd = 0.0001;  // Derivative gain
+float kp = 0.15;  // Proportional gain
+float ki = 0.8; // Integral gain
+float kd = 0.0001;  // Derivative gain
 
-double input, output, setpoint=required_rpm ;
+float input, output, setpoint=required_rpm ;
 PID myPID(&input, &output, &setpoint, kp, ki, kd, DIRECT);
 
 void IRAM_ATTR isr()
